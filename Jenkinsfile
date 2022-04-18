@@ -7,7 +7,7 @@ podTemplate(containers: [
     containerTemplate(name: 'argo-cd-cli', image: 'argoproj/argocd-cli:v0.7.1', ttyEnabled: true, command: 'cat', args: '', envVars:[envVar(key: 'ARGOCD_SERVER', value: argocdServer)] ),
     ],
     volumes: [hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock')]
-  )
+  ){
 
   node(POD_LABEL) {
 
@@ -54,4 +54,4 @@ podTemplate(containers: [
       }
     }
   }
-
+}
