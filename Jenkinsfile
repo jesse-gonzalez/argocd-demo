@@ -5,7 +5,8 @@ podTemplate(containers: [
     containerTemplate(name: 'docker', image: 'docker:17.09', ttyEnabled: true, command: 'cat', args: '' ),
     containerTemplate(name: 'argo-cd-tools', image: 'argoproj/argo-cd-tools:latest', ttyEnabled: true, command: 'cat', args: '', envVars:[envVar(key: 'GIT_SSH_COMMAND', value: 'ssh -o StrictHostKeyChecking=no')] ),
     containerTemplate(name: 'argo-cd-cli', image: 'argoproj/argocd-cli:v0.7.1', ttyEnabled: true, command: 'cat', args: '', envVars:[envVar(key: 'ARGOCD_SERVER', value: argocdServer)] ),
-    ]
+    ],
+    volumes: [hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock')]
   ){
 
   node(POD_LABEL) {
@@ -17,7 +18,7 @@ podTemplate(containers: [
       container('docker') {
           stage('Build Docker Image') {
             // Build new image
-            sh "until docker ps; do sleep 3; done && docker build -t ntnxdemo/argocd-demo:${env.GIT_COMMIT} ."
+            sh "docker build -t ntnxdemo/argocd-demo:${env.GIT_COMMIT} ."
             // Publish new image
             sh "docker login --username $DOCKERHUB_CREDS_USR --password $DOCKERHUB_CREDS_PSW && docker push ntnxdemo/argocd-demo:${env.GIT_COMMIT}"
           }
