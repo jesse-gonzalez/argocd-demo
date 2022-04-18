@@ -1,32 +1,15 @@
-pipeline {
-  agent {
-    kubernetes {
-      yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: dind
-    image: docker:18.09-dind
-    securityContext:
-      privileged: true
-  - name: docker
-    env:
-    - name: DOCKER_HOST
-      value: 127.0.0.1
-    image: docker:18.09
-    command:
-    - cat
-    tty: true
-  - name: tools
-    image: argoproj/argo-cd-ci-builder:v0.13.1
-    command:
-    - cat
-    tty: true
-"""
-    }
-  }
-  stages {
+def argocdServer = "argocd.10.38.16.13.nip.io"
+
+podTemplate(containers: [
+    containerTemplate(name: 'builder', image: 'golang:1.10.3', ttyEnabled: true, command: 'cat', args: ''),
+    containerTemplate(name: 'docker', image: 'docker:17.09', ttyEnabled: true, command: 'cat', args: '' ),
+    containerTemplate(name: 'argo-cd-tools', image: 'argoproj/argo-cd-tools:latest', ttyEnabled: true, command: 'cat', args: '', envVars:[envVar(key: 'GIT_SSH_COMMAND', value: 'ssh -o StrictHostKeyChecking=no')] ),
+    containerTemplate(name: 'argo-cd-cli', image: 'argoproj/argocd-cli:v0.7.1', ttyEnabled: true, command: 'cat', args: '', envVars:[envVar(key: 'ARGOCD_SERVER', value: argocdServer)] ),
+    ],
+    volumes: [hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock')]
+  )
+
+  node(POD_LABEL) {
 
     stage('Build') {
       environment {
@@ -62,7 +45,7 @@ spec:
     stage('Deploy to Prod') {
       steps {
         input message:'Approve deployment?'
-        container('tools') {
+        container('argo-cd-tools') {
           dir("argocd-demo-deploy") {
             sh "cd ./prod && kustomize edit set image ntnxdemo/argocd-demo:${env.GIT_COMMIT}"
             sh "git commit -am 'Publish new version' && git push || echo 'no changes'"
