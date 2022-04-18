@@ -51,7 +51,7 @@ spec:
       steps {
         container('tools') {
           sh "git clone https://$GIT_CREDS_USR:$GIT_CREDS_PSW@github.com/ntnxdemo/argocd-demo-deploy.git"
-          sh "git config --global user.email 'ci@ci.com'"
+          sh "git config --global user.email 'admin@no-reply.com'"
 
           dir("argocd-demo-deploy") {
             sh "cd ./e2e && kustomize edit set image ntnxdemo/argocd-demo:${env.GIT_COMMIT}"
