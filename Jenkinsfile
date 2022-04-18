@@ -26,18 +26,19 @@ podTemplate(containers: [
     }
 
     stage('Deploy E2E') {
-      environment {
-        GIT_CREDS = credentials('git')
-      }
-      container('argo-cd-tools') {
-        stage('Deploy E2E') {
-          sh "git clone https://$GIT_CREDS_USR:$GIT_CREDS_PSW@github.com/ntnxdemo/argocd-demo-deploy.git"
-          sh "git config --global user.email 'admin@no-reply.com'"
+        environment {
+          GIT_CREDS = credentials('git')
+        }
+        container('argo-cd-tools') {
+          stage('Deploy E2E') {
+            sh "git clone https://$GIT_CREDS_USR:$GIT_CREDS_PSW@github.com/ntnxdemo/argocd-demo-deploy.git"
+            sh "git config --global user.email 'admin@no-reply.com'"
 
-          dir("argocd-demo-deploy") {
-            sh "cd ./e2e && kustomize edit set image ntnxdemo/argocd-demo:${env.GIT_COMMIT}"
-            sh "git commit -am 'Publish new version' && git push || echo 'no changes'"
-          }
+            dir("argocd-demo-deploy") {
+              sh "cd ./e2e && kustomize edit set image ntnxdemo/argocd-demo:${env.GIT_COMMIT}"
+              sh "git commit -am 'Publish new version' && git push || echo 'no changes'"
+            }
+        }
       }
     }
   }
